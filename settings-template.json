@@ -1,3 +1,5 @@
 {
-    "app_token": "your-app-token-here"
+    "app_token": "your-app-token-here",
+    "home_guild_id": your-home-guild-id-here,
+    "off_command_description": "Turns off the bot"
 }
