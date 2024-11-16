@@ -115,7 +115,7 @@ def main() -> None:
     
     log_filename = get_setting('log_file')
     if log_filename == '':
-        log_output('No logging file ha been set. Logging into file will not be possible', level=logging.ERROR)
+        log_output('No logging file has been set. Logging into file will not be possible', level=logging.ERROR)
     else:
         logging.basicConfig(
             filename=log_filename,
