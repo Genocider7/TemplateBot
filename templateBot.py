@@ -4,9 +4,12 @@ This is a main program file for the bot
 
 import discord
 
+import logging
 import os
 import json
+import sys
 
+from datetime import datetime
 from Models.ReturnInfo import ReturnInfo
 
 from constants import *
@@ -15,14 +18,35 @@ settings = {}
 client = discord.Client(intents=discord_intents)
 command_tree = discord.app_commands.CommandTree(client)
 
+logger = logging.getLogger(__name__)
+logging_into_file = False
+
+# Prints out output both to stdout/stderr and potentially to a file 
+def log_output(output_string: str, level: int = logging.INFO) -> None:
+    level_name = ''
+    string_levels = {
+        logging.INFO: 'INFO',
+        logging.ERROR: 'ERROR',
+        logging.CRITICAL: 'CRITICAL'
+    }
+    for level_int, level_str in string_levels.items():
+        if level_int == level:
+            level_name = level_str
+            break
+    print_file = sys.stderr if level in (logging.ERROR, logging.CRITICAL) else sys.stdout
+    timestamp = datetime.now().strftime(date_format)
+    if logging_into_file:
+        logger.log(level, output_string)
+    print(f'{timestamp} {level_name}\t{__name__} {output_string}', file=print_file)
+
 # Function to load all the settings and assign them to a global variable
 def load_settings(setting_path: str = settings_filename, required_keys: list = []) -> ReturnInfo:
     global settings
     result = ReturnInfo(returnCode=0, Messages={
-        1: f'Error: File \"{setting_path}\" not found',
-        2: 'Error: Unable to open the file',
-        3: 'Error: Unable to read json',
-        4: 'Error: Missing required key(s): {}'
+        1: f'File \"{setting_path}\" not found',
+        2: 'Unable to open the file',
+        3: 'Unable to read json',
+        4: 'Missing required key(s): {}'
     })
     if os.path.isfile(setting_path):
         try:
@@ -72,22 +96,42 @@ def set_up_functions() -> None:
             await context.response.send_message('Turning off bot...')
             await client.close()
     else:
-        print('Unable to set up off command')
+        log_output('Unable to set up off command', level=logging.ERROR)
 
 # Called when bot connects to discord
 @client.event
 async def on_ready() -> None:
-    print(f'Logged in as {client.user.name}')
-    print(client.user.id)
+    log_output(f'Logged in as {client.user.name}')
+    log_output(client.user.id)
     set_up_functions()
 
 # Main function of the program
 def main() -> None:
+    global logging_into_file
     result = load_settings(required_keys=required_settings)
     if not result:
-        print(result)
+        log_output(result, level=logging.CRITICAL)
         return
-    client.run(settings['app_token'])
+    
+    log_filename = get_setting('log_file')
+    if log_filename == '':
+        log_output('No logging file ha been set. Logging into file will not be possible', level=logging.ERROR)
+    else:
+        logging.basicConfig(
+            filename=log_filename,
+            encoding='utf-8',
+            filemode='a',
+            level=logging.DEBUG,
+            format='%(asctime)s %(levelname)s\t%(name)s %(message)s',
+            datefmt=date_format
+        )
+        logging_into_file = True
+
+    try:
+        client.run(settings['app_token'])
+    except discord.errors.LoginFailure:
+        log_output('There was a problem with logging in. Check your app token in the settings file', level=logging.CRITICAL)
+        return
 
 if __name__ == '__main__':
     main()
