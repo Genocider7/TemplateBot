@@ -2,5 +2,8 @@
     "app_token": "your-app-token-here",
     "home_guild_id": your-home-guild-id-here,
     "off_command_description": "Turns off the bot",
-    "log_file": "template_bot.log"
+    "log_file": "template_bot.log",
+    "db_username": "your-mysql-username-here",
+    "db_password": "your-mysql-password-here",
+    "database_name": "Template_DB"
 }
