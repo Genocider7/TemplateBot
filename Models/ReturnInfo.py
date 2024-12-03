@@ -5,12 +5,13 @@ from .Model import Model
 class ReturnInfo(Model):
     @property
     def argumentOrder(self):
-        return ['returnCode', 'okCodes', 'Messages']
+        return ['returnCode', 'okCodes', 'Messages', 'returnValue']
     
     def __init__(self, *args, **kwargs):
         self.returnCode = None
         self.okCodes = None
         self.Messages = None
+        self.returnValue = None
         for var_name, var_value in self.organizeArguments(*args, **kwargs).copy().items():
             setattr(self, var_name, var_value)
         if self.okCodes is None:
