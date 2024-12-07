@@ -5,6 +5,7 @@ settings.json
 *.log
 **.png
 **.jpg
+**.jpeg 
 **.diff
 test.py
-**.sql
+**.patch

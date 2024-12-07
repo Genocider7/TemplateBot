@@ -30,6 +30,6 @@ class ReturnInfo(Model):
     def __str__(self):
         if self.returnCode is None:
             return 'Error: return code is None'
-        if self.returnCode in self.Messages.keys():
+        if type(self.Messages) == dict and self.returnCode in self.Messages.keys():
             return self.Messages[self.returnCode]
         return 'OK' if self else 'Error'

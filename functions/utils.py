@@ -1,9 +1,11 @@
 import os
 import sys
 import json
+from mysql.connector.cursor import MySQLCursor
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from Models.ReturnInfo import ReturnInfo
-from constants import settings_filename
+from constants import settings_filename, description_placeholder
+from functions.database_functions import select as mysql_select
 
 # Function to load all the settings
 def load_settings(setting_path: str = settings_filename, required_keys: list = []) -> ReturnInfo:
@@ -36,6 +38,16 @@ def load_settings(setting_path: str = settings_filename, required_keys: list = [
         result.returnCode = 1
     return result
 
+def load_descriptions(db_cursor: MySQLCursor) -> ReturnInfo:
+    query = 'SELECT d.field_name, d.description_text FROM descriptions AS d'
+    result = mysql_select(db_cursor, query, True, True)
+    if not result:
+        return result
+    descriptions = {}
+    for row in result.returnValue:
+        descriptions[row[0]] = row[1]
+    return ReturnInfo(returnCode=0, returnValue=descriptions)
+
 # Easier way to get a setting without worrying if it's been set if it's negligable
 def get_setting(settings_set: dict, setting_name: str, type_of_setting: type = str) -> str | int | bool:
     if setting_name in settings_set.keys():
@@ -47,3 +59,8 @@ def get_setting(settings_set: dict, setting_name: str, type_of_setting: type = s
     if type_of_setting == bool:
         return False
     return None
+
+def get_description(description_dict: dict | None, field_name: str) -> str:
+    if description_dict is None:
+        return description_placeholder
+    return description_dict[field_name] if field_name in description_dict.keys() else description_placeholder
