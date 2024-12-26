@@ -7,3 +7,5 @@
 - do models normally
 
 - make embeds self-destruct after a few minutes
+
+- add validation for options

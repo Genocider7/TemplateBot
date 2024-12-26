@@ -2,6 +2,7 @@ import os
 import sys
 import json
 from mysql.connector.cursor import MySQLCursor
+from hashlib import sha256
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from Models.ReturnInfo import ReturnInfo
 from constants import settings_filename, description_placeholder
@@ -64,3 +65,6 @@ def get_description(description_dict: dict | None, field_name: str) -> str:
     if description_dict is None:
         return description_placeholder
     return description_dict[field_name] if field_name in description_dict.keys() else description_placeholder
+
+def generate_temp_hash() -> str:
+    return sha256(os.urandom(32)).hexdigest()

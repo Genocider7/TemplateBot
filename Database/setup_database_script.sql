@@ -7,7 +7,8 @@ CREATE TABLE images (
     image_extension VARCHAR(5) NOT NULL,
     user_id VARCHAR(18) NOT NULL,
     enumeration TINYINT NOT NULL,
-    created_at DATETIME NOT NULL
+    created_at DATETIME NOT NULL,
+    filename VARCHAR(26) AS (CONCAT(user_id, "_", enumeration, ".", image_extension))
 );
 
 CREATE TABLE editable_fields (

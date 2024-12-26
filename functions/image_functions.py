@@ -108,3 +108,38 @@ def write_on_image(image: numpy.array, text: str, font: int, font_scale: int | f
         ret.returnCode = 1
     ret.returnValue = return_image
     return ret
+
+def show_fields(image: numpy.array, field_coordinates: list[tuple[int, int, int, int]], field_names: list[str], color: tuple[int, int, int] = (255, 0, 0), thickness: int = 1) -> ReturnInfo:
+    field_image = numpy.copy(image)
+    ret = ReturnInfo(returnCode=0)
+    for i in range(len(field_coordinates)):
+        pt1 = (field_coordinates[i][1], field_coordinates[i][0])
+        pt2 = (field_coordinates[i][3], field_coordinates[i][2])
+        cv2.rectangle(field_image, pt1, pt2, color, thickness)
+        max_width = pt2[0] - pt1[0]
+        estimated_size = max_width/len(field_names[i])/19.1
+        result = write_on_image(field_image, field_names[i], cv2.FONT_HERSHEY_SIMPLEX, estimated_size, color, thickness, cv2.LINE_8, field_coordinates[i])
+        if not result:
+            return result
+        field_image = result.returnValue
+    ret.returnValue = field_image
+    return ret
+
+def hex_to_bgr(hexcode: str) -> ReturnInfo:
+    ret = ReturnInfo(returnCode=0, Messages={
+        1: '\"{}\" is not a correct hex code'.format(hexcode)
+    })
+    letters = '0123456789ABCDEF'
+    if hexcode.startswith('#'):
+        code = hexcode[1:].upper()
+    else:
+        code = hexcode.upper()
+    if len(code) != 6 or not all([letter in letters for letter in code]):
+        ret.returnCode = 1
+        return ret
+    red = 16*letters.find(code[0]) + letters.find(code[1])
+    green = 16*letters.find(code[2]) + letters.find(code[3])
+    blue = 16*letters.find(code[4]) + letters.find(code[5])
+    ret.returnValue = (blue, green, red)
+    return ret
+    

@@ -7,5 +7,7 @@ settings.json
 **.jpg
 **.jpeg 
 **.diff
-test.py
 **.patch
+
+test.py
+Database/testdata.sql
