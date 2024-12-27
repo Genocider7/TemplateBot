@@ -11,12 +11,15 @@ def find_biggest_rectangle(image: numpy.array, bgr_color: list[int], hue_range: 
     })
     hsv_color = numpy.array([[bgr_color]], numpy.uint8)
     hsv_color = cv2.cvtColor(hsv_color, cv2.COLOR_BGR2HSV)
-    h, s, v = hsv_color[0, 0]
+    h, s, v = (int(number) for number in hsv_color[0, 0])
     hsv_picture = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
     lower_bound = numpy.array([max(0, h - hue_range // 2), max(0, s - saturation_range // 2), max(0, v - value_range // 2)], numpy.uint8)
     upper_bound = numpy.array([min(179, h + hue_range // 2), min(255, s + saturation_range // 2), min(255, v + value_range // 2)], numpy.uint8)
     binary_mask = cv2.inRange(hsv_picture, lower_bound, upper_bound)
     contours, hierarchy = cv2.findContours(binary_mask, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
+    if len(contours) == 0 or hierarchy is None:
+        ret.returnCode = 1
+        return ret
     hierarchy = hierarchy[0]
     biggest_area = 0
     biggest_contour = None

@@ -8,8 +8,12 @@ from Models.ReturnInfo import ReturnInfo
 from constants import settings_filename, description_placeholder
 from functions.database_functions import select as mysql_select
 
+settings = {}
+descriptions = {}
+
 # Function to load all the settings
 def load_settings(setting_path: str = settings_filename, required_keys: list = []) -> ReturnInfo:
+    global settings
     result = ReturnInfo(returnCode=0, Messages={
         1: f'File \"{setting_path}\" not found',
         2: 'Unable to open the file',
@@ -26,7 +30,7 @@ def load_settings(setting_path: str = settings_filename, required_keys: list = [
                     result.returnCode = 4
                     missing_keys.append(key)
             if result:
-                result.returnValue = settings_temp
+                settings = settings_temp
             else:
                 result.format_message(4, missing_keys)
         except IOError:
@@ -40,19 +44,21 @@ def load_settings(setting_path: str = settings_filename, required_keys: list = [
     return result
 
 def load_descriptions(db_cursor: MySQLCursor) -> ReturnInfo:
+    global descriptions
     query = 'SELECT d.field_name, d.description_text FROM descriptions AS d'
     result = mysql_select(db_cursor, query, True, True)
     if not result:
         return result
-    descriptions = {}
     for row in result.returnValue:
         descriptions[row[0]] = row[1]
-    return ReturnInfo(returnCode=0, returnValue=descriptions)
+    return ReturnInfo(returnCode=0)
 
 # Easier way to get a setting without worrying if it's been set if it's negligable
-def get_setting(settings_set: dict, setting_name: str, type_of_setting: type = str) -> str | int | bool:
-    if setting_name in settings_set.keys():
-        return type_of_setting(settings_set[setting_name])
+def get_setting(setting_name: str, type_of_setting: type | None = None) -> str | int | bool | None:
+    if setting_name in settings.keys():
+        if type_of_setting is None:
+            return settings[setting_name]
+        return type_of_setting(settings[setting_name])
     if type_of_setting == str:
         return ''
     if type_of_setting == int:
@@ -61,10 +67,11 @@ def get_setting(settings_set: dict, setting_name: str, type_of_setting: type = s
         return False
     return None
 
-def get_description(description_dict: dict | None, field_name: str) -> str:
-    if description_dict is None:
-        return description_placeholder
-    return description_dict[field_name] if field_name in description_dict.keys() else description_placeholder
+def is_setting(setting_name):
+    return setting_name in settings
+
+def get_description(field_name: str) -> str:
+    return descriptions[field_name] if field_name in descriptions.keys() else description_placeholder
 
 def generate_temp_hash() -> str:
     return sha256(os.urandom(32)).hexdigest()
