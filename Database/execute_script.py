@@ -2,7 +2,7 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from constants import db_required_settings
-from functions.utils import load_settings
+from functions.utils import load_settings, get_setting
 from functions.database_functions import connect_database, execute_query
 
 def main(args: str) -> None:
@@ -23,8 +23,7 @@ def main(args: str) -> None:
     if not result:
         print(result)
         return
-    settings = result.returnValue
-    result = connect_database(settings['db_username'], settings['db_password'], settings['database_name'])
+    result = connect_database(get_setting('db_username'), get_setting('db_password'), get_setting('database_name'))
     if not result:
         print(result)
         return

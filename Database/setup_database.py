@@ -2,17 +2,16 @@ import os
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from functions.database_functions import connect_database
-from functions.utils import load_settings
+from functions.utils import load_settings, get_setting
 from constants import db_required_settings, setup_database_script
 from mysql.connector import Error as mysql_error, errorcode
 
 def main():
-    settings = load_settings(required_keys=db_required_settings)
-    if not settings:
-        print(settings)
+    result = load_settings(required_keys=db_required_settings)
+    if not result:
+        print(result)
         return
-    settings = settings.returnValue
-    connection = connect_database(settings['db_username'], settings['db_password'])
+    connection = connect_database(get_setting('db_username'), get_setting('db_password'))
     if not connection:
         print(connection)
         return
@@ -21,7 +20,7 @@ def main():
     try:
         with open(setup_database_script, 'r') as query_file:
             statements = [s.strip() for s in query_file.read().split(';')]
-        statements = ['CREATE DATABASE IF NOT EXISTS {}'.format(settings['database_name']), 'USE {}'.format(settings['database_name'])] + statements
+        statements = ['CREATE DATABASE IF NOT EXISTS {}'.format(get_setting('database_name')), 'USE {}'.format(get_setting('database_name'))] + statements
         for statement in statements:
             if statement:
                 db_cursor.execute(statement)
@@ -29,9 +28,9 @@ def main():
         ok = True
     except mysql_error as err:
         if err.errno == errorcode.ER_DBACCESS_DENIED_ERROR:
-            print('Program was not able to continue due to insufficient privileges for {}@localhost'.format(settings['db_username']))
+            print('Program was not able to continue due to insufficient privileges for {}@localhost'.format(get_setting('db_username')))
             print('Needed global privileges: CREATE')
-            print('Privileges needed at least for table {} (if already exists): DROP, REFERENCES'.format(settings['database_name']))
+            print('Privileges needed at least for table {} (if already exists): DROP, REFERENCES'.format(get_setting('database_name')))
         else:
             print(err)
     except FileNotFoundError:
