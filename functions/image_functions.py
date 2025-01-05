@@ -1,12 +1,9 @@
 import cv2
 import numpy
-import sys
-import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from Models.ReturnInfo import ReturnInfo
+from .ReturnInfo import ReturnInfo
 
 def find_biggest_rectangle(image: numpy.array, bgr_color: list[int], hue_range: int, saturation_range: int, value_range: int) -> ReturnInfo:
-    ret = ReturnInfo(returnCode=0, Messages={
+    ret = ReturnInfo(Messages={
         1: 'No color found'
     })
     hsv_color = numpy.array([[bgr_color]], numpy.uint8)
@@ -49,7 +46,7 @@ def insert_image_into_image(Image_background: numpy.array, Image_element: numpy.
     x_initial = size_rect[1]
     y_final = size_rect[2]
     x_final = size_rect[3]
-    ret = ReturnInfo(returnCode=0, Messages={
+    ret = ReturnInfo(Messages={
         1: 'Incorrect size of the target area',
         2: 'Image array is empty'
     })
@@ -86,7 +83,7 @@ def wrap_text(text: str, max_width: int, font: int | float, font_scale: int, thi
     return word_lines
 
 def write_on_image(image: numpy.array, text: str, font: int, font_scale: int | float, color: tuple[int, int, int], thickness: int, line_type: int, textarea: tuple[int, int, int, int]) -> ReturnInfo:
-    ret = ReturnInfo(returnCode = 0, okCodes = [0, 1], Messages={
+    ret = ReturnInfo(okCodes=[0, 1], Messages={
         1: 'The bounding box is too small to contain all text. Consider lowering the font scale.',
         2: 'The textarea is not correct',
         3: 'Image array is empty'
@@ -112,9 +109,9 @@ def write_on_image(image: numpy.array, text: str, font: int, font_scale: int | f
     ret.returnValue = return_image
     return ret
 
-def show_fields(image: numpy.array, field_coordinates: list[tuple[int, int, int, int]], field_names: list[str], color: tuple[int, int, int] = (255, 0, 0), thickness: int = 1) -> ReturnInfo:
+def show_fields(image: numpy.array, field_coordinates: list[tuple[int, int, int, int]], field_names: list[str], color: tuple[int, int, int] = (255, 0, 0), thickness: int = 2) -> ReturnInfo:
     field_image = numpy.copy(image)
-    ret = ReturnInfo(returnCode=0)
+    ret = ReturnInfo()
     for i in range(len(field_coordinates)):
         pt1 = (field_coordinates[i][1], field_coordinates[i][0])
         pt2 = (field_coordinates[i][3], field_coordinates[i][2])
@@ -129,7 +126,7 @@ def show_fields(image: numpy.array, field_coordinates: list[tuple[int, int, int,
     return ret
 
 def hex_to_bgr(hexcode: str) -> ReturnInfo:
-    ret = ReturnInfo(returnCode=0, Messages={
+    ret = ReturnInfo(Messages={
         1: '\"{}\" is not a correct hex code'.format(hexcode)
     })
     letters = '0123456789ABCDEF'

@@ -2,8 +2,11 @@
     "app_token": "your-app-token-here",
     "home_guild_id": your-home-guild-id-here,
     "log_file": "template_bot.log",
+    "mysql_log_file": "mysql_template_bot.log",
     "db_username": "your-mysql-username-here",
     "db_password": "your-mysql-password-here",
     "database_name": "Template_DB",
-    "testing": false
+    "testing": false,
+    "timezone": "Your/Timezone/Here",
+    "log_dir": "logs"
 }
