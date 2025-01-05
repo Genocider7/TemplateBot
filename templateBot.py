@@ -305,7 +305,7 @@ async def on_ready() -> None:
     if '--global-sync' in sys.argv or ('--sync' in sys.argv and not get_setting('testing', bool)):
         await command_tree.sync()
         log_output('synced slash commands globally')
-    if '--sync' in sys.argv and get_setting('testing', bool) and get_setting('home_guild_id', bool):
+    if '--sync' in sys.argv and get_setting('home_guild_id', bool):
         await command_tree.sync(guild=discord.Object(id=get_setting('home_guild_id')))
         log_output('synced slash commands in home server')
     if logging_into_file:
