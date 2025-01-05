@@ -9,5 +9,6 @@ settings.json
 **.diff
 **.patch
 
+Tests/*
 test.py
 Database/testdata.sql
