@@ -5,6 +5,7 @@ from mysql.connector.cursor import MySQLCursor
 from hashlib import sha256
 from datetime import datetime
 from zoneinfo import ZoneInfo
+from typing import Callable
 from .ReturnInfo import ReturnInfo
 from .database_functions import select as mysql_select
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -12,6 +13,52 @@ from constants import settings_filename, description_placeholder
 
 settings = {}
 descriptions = {}
+
+def find_option_in_args(args: list[str], option_name: str, option_short: str | None = None, verify_function: Callable[[str], bool] = lambda _: True, custom_failure_message: str = '\"{value}\" is not a correct value for option \"{option_name}\"') -> ReturnInfo:
+    ret = ReturnInfo(okCodes=[0,1], Messages={
+        1: 'No option found',
+        2: 'No value given for option \"{option_name}\"',
+        3: custom_failure_message
+    })
+    if not option_name.startswith('--'):
+        option_name = '--' + option_name
+    if not option_short is None and not option_short.startswith('-'):
+        option_short = '-' + option_short
+    index = None
+    value = None
+    if option_name in args:
+        index = args.index(option_name)
+    elif option_short in args:
+        index = args.index(option_short)
+    if not index is None:
+        try:
+            value = args[index + 1]
+        except IndexError:
+            ret.format_message(2, option_name=option_name)
+            ret.returnCode = 2
+            return ret
+        if not verify_function(value):
+            ret.format_message(3, value=value, option_name=option_name)
+            ret.returnCode = 3
+            return ret
+    else:
+        # Guaranteed for each argument to not be exactly option name or short option name
+        for arg in args:
+            for opt in (option_name, option_short):
+                if opt is None:
+                    continue
+                if arg.startswith(opt):
+                    value = arg[(len(opt)):]
+                    if not verify_function(value):
+                        ret.format_message(3, value=value, option_name=opt)
+                        ret.returnCode = 3
+                        return ret
+    # If value is still None it means that no option was found
+    if value is None:
+        ret.returnCode = 1
+        return ret
+    ret.returnValue = value
+    return ret
 
 # Function to load all the settings
 def load_settings(setting_path: str = settings_filename, required_keys: list = []) -> ReturnInfo:

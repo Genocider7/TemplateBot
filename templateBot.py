@@ -15,7 +15,7 @@ from datetime import datetime, date
 from zoneinfo import ZoneInfo
 
 from constants import discord_intents, logging_format, date_format, main_required_settings, db_required_settings, default_color_hex, project_name, absolute_path_to_project, log_file_split_check_timer
-from functions.utils import load_settings, get_setting, load_descriptions, get_description, custom_time
+from functions.utils import load_settings, get_setting, load_descriptions, get_description, custom_time, find_option_in_args
 from functions.database_functions import connect_database, set_logger as set_database_logger
 from functions.ReturnInfo import ReturnInfo
 
@@ -370,19 +370,18 @@ def main() -> None:
     if timezone is None:
         log_output('The timezone parameter has not been found in options or was set to None', logging.WARNING)
 
-    if '--log-date' in sys.argv:
-        position = sys.argv.index('--log-date')
-        if position + 1 >= len(sys.argv):
-            log_output('No date provided', logging.CRITICAL)
-            return
-        date_str = sys.argv[position + 1]
+    def verify_iso_date(date_string: str) -> bool:
         try:
-            log_date = datetime.fromisoformat(date_str).date()
+            datetime.fromisoformat(date_string)
         except ValueError:
-            log_output('Incorrect date format. Use YYYY-MM-DD (ISO 8601 format)', logging.CRITICAL)
-            return
-    if not isinstance(log_date, date):
-        log_date = datetime.now(timezone).date()        
+            return False
+        return True
+
+    result = find_option_in_args(sys.argv[1:], '--log-date', verify_function=verify_iso_date, custom_failure_message='Incorrect date format. Use YYYY-MM-DD (ISO 8601 format)')
+    if not result:
+        log_output(result, logging.CRITICAL)
+        return
+    log_date = datetime.fromisoformat(result.returnValue).date() if result.returnCode == 0 else datetime.now(timezone).date()
 
     result = connect_database(get_setting('db_username'), get_setting('db_password'), get_setting('database_name'))
     if not result:
