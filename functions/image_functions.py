@@ -100,7 +100,7 @@ def write_on_image(image: numpy.array, text: str, font: int, font_scale: int | f
     (_, text_height), baseline = cv2.getTextSize(text, font, font_scale, thickness)
     text_height += baseline
     lines = wrap_text(text, textarea[3] - textarea[1], font, font_scale, thickness)
-    current_height = textarea[0] + text_height
+    current_height = textarea[0] + text_height - baseline
     for line in lines:
         cv2.putText(return_image, line, (textarea[1], current_height), font, font_scale, color, thickness, line_type)
         current_height += text_height
@@ -109,7 +109,8 @@ def write_on_image(image: numpy.array, text: str, font: int, font_scale: int | f
     ret.returnValue = return_image
     return ret
 
-def show_fields(image: numpy.array, field_coordinates: list[tuple[int, int, int, int]], field_names: list[str], color: tuple[int, int, int] = (255, 0, 0), thickness: int = 2) -> ReturnInfo:
+def show_fields(image: numpy.array, field_coordinates: list[tuple[int, int, int, int]], field_names: list[str], color: tuple[int, int, int] = (255, 0, 0)) -> ReturnInfo:
+    thickness = 2
     field_image = numpy.copy(image)
     ret = ReturnInfo()
     for i in range(len(field_coordinates)):
@@ -117,8 +118,12 @@ def show_fields(image: numpy.array, field_coordinates: list[tuple[int, int, int,
         pt2 = (field_coordinates[i][3], field_coordinates[i][2])
         cv2.rectangle(field_image, pt1, pt2, color, thickness)
         max_width = pt2[0] - pt1[0]
-        estimated_size = max_width/len(field_names[i])/19.1
-        result = write_on_image(field_image, field_names[i], cv2.FONT_HERSHEY_SIMPLEX, estimated_size, color, thickness, cv2.LINE_8, field_coordinates[i])
+        max_height = pt2[1] - pt1[1]
+        width_estimated_size = max_width/len(field_names[i])/19.1
+        height_estimated_size = max_height/30.5
+        estimated_size = min(width_estimated_size, height_estimated_size)
+        linetype = cv2.LINE_8 if estimated_size > 0.7 else cv2.LINE_4
+        result = write_on_image(field_image, field_names[i], cv2.FONT_HERSHEY_SIMPLEX, estimated_size, color, thickness, linetype, field_coordinates[i])
         if not result:
             return result
         field_image = result.returnValue

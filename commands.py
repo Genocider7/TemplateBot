@@ -226,7 +226,7 @@ async def view_one_template(context: discord.Interaction, template_number: int, 
         result = hex_to_bgr(default_color_hex)
         bgr_color = result.returnValue
         original_image = imread(path.join(absolute_path_to_project, 'Images', filename))
-        result = show_fields_image(original_image, field_coords, field_names, bgr_color, 2)
+        result = show_fields_image(original_image, field_coords, field_names, bgr_color)
         if not result:
             log_output('Error while generating a template with fields for file: {}'.format(filename), logging.ERROR)
             await context.followup.send('Sorry, something went wrong. Try again later')
@@ -288,7 +288,7 @@ async def add_field_command_prototype(context: discord.Interaction, field_type: 
             return
         bounds = result.returnValue
     original_image = imread(path.join(absolute_path_to_project, 'Images', filename))
-    result = show_fields_image(original_image, [bounds], [name], bgr_color, 2)
+    result = show_fields_image(original_image, [bounds], [name], bgr_color)
     if not result:
         log_output('Error while trying to create a template with fields: {}'.format(result), logging.ERROR)
         await followup_and_delete(context, 'Sorry, something went wrong. Try again later')
