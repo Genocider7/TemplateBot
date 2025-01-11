@@ -259,12 +259,21 @@ async def add_field_command_prototype(context: discord.Interaction, field_type: 
     result = mysql_select(db_cursor, query)
     if not result:
         if result.returnCode == 1:
-            await followup_and_delete(context, 'No template with a give number for user {} exists. Please create a template with /create_template command'.format(context.user.display_name))
+            await followup_and_delete(context, 'No template with a given number for user {} exists. Please create a template with /create_template command'.format(context.user.display_name))
             return
         await error_with_mysql_query(context, query, str(result), True)
         return
     template_id, filename = result.returnValue
     filepath = path.join(absolute_path_to_project, 'Images', filename)
+    query = f'SELECT 1 FROM editable_fields WHERE field_name=\"{name}\" AND image_id={template_id}'
+    result = mysql_select(db_cursor, query)
+    result.okCodes.append(1)
+    if result.returnCode == 0:
+        await followup_and_delete(context, 'A field with that name already exists for this template')
+        return
+    if not result:
+        await error_with_mysql_query(context, query, str(result), True)
+        return
     result = hex_to_bgr(color)
     if not result:
         await followup_and_delete(context, result)
