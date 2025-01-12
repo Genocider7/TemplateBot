@@ -2,6 +2,13 @@ import cv2
 import numpy
 from .ReturnInfo import ReturnInfo
 
+def get_recommended_font_size(bounds: tuple[int], character_count: int) -> float:
+    max_width = bounds[3] - bounds[1]
+    max_height = bounds[2] - bounds[0]
+    width_estimated_size = max_width/character_count/19.1
+    height_estimated_size = max_height/30.5
+    return min(width_estimated_size, height_estimated_size)
+
 def find_biggest_rectangle(image: numpy.array, bgr_color: list[int], hue_range: int, saturation_range: int, value_range: int) -> ReturnInfo:
     ret = ReturnInfo(Messages={
         1: 'No color found'
@@ -117,11 +124,7 @@ def show_fields(image: numpy.array, field_coordinates: list[tuple[int, int, int,
         pt1 = (field_coordinates[i][1], field_coordinates[i][0])
         pt2 = (field_coordinates[i][3], field_coordinates[i][2])
         cv2.rectangle(field_image, pt1, pt2, color, thickness)
-        max_width = pt2[0] - pt1[0]
-        max_height = pt2[1] - pt1[1]
-        width_estimated_size = max_width/len(field_names[i])/19.1
-        height_estimated_size = max_height/30.5
-        estimated_size = min(width_estimated_size, height_estimated_size)
+        estimated_size = get_recommended_font_size(field_coordinates[i], len(field_names[i]))
         linetype = cv2.LINE_8 if estimated_size > 0.7 else cv2.LINE_4
         result = write_on_image(field_image, field_names[i], cv2.FONT_HERSHEY_SIMPLEX, estimated_size, color, thickness, linetype, field_coordinates[i])
         if not result:
