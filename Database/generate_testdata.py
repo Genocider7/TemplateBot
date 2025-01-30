@@ -13,7 +13,7 @@ default_target_filename = os.path.join(absolute_path_to_project, 'Database', 'te
 db_connection = None
 db_cursor = None
 
-def setup() -> None:
+def setup():
     global db_connection
     global db_cursor
     result = load_settings(required_keys=db_required_settings)

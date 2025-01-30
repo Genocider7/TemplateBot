@@ -9,7 +9,7 @@ from typing import Callable
 from .ReturnInfo import ReturnInfo
 from .database_functions import select as mysql_select
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from constants import settings_filename, description_placeholder
+from constants import settings_filename, description_placeholder, absolute_path_to_project
 
 settings = {}
 descriptions = {}
@@ -116,7 +116,7 @@ def get_setting(setting_name: str, type_of_setting: type | None = None) -> str |
         return False
     return None
 
-def is_setting(setting_name):
+def is_setting(setting_name: str) -> bool:
     return setting_name in settings
 
 def get_description(field_name: str) -> str:
@@ -129,3 +129,8 @@ def custom_time(*_):
     timezone = ZoneInfo(get_setting('timezone', str)) if get_setting('timezone', bool) else None
     now = datetime.now(timezone)
     return now.timetuple()
+
+def ensure_image_dir():
+    image_dir = os.path.join(absolute_path_to_project, 'Images')
+    if not os.path.isdir(image_dir):
+        os.mkdir(image_dir, 755)

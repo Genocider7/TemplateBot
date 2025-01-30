@@ -11,11 +11,11 @@ import sys
 from shutil import move as move_file
 from os import makedirs, path
 
-from datetime import datetime, date
+from datetime import datetime
 from zoneinfo import ZoneInfo
 
 from constants import discord_intents, logging_format, date_format, main_required_settings, db_required_settings, default_color_hex, project_name, absolute_path_to_project, log_file_split_check_timer
-from functions.utils import load_settings, get_setting, load_descriptions, get_description, custom_time, find_option_in_args
+from functions.utils import load_settings, get_setting, load_descriptions, get_description, custom_time, find_option_in_args, ensure_image_dir
 from functions.database_functions import connect_database, set_logger as set_database_logger
 from functions.ReturnInfo import ReturnInfo
 
@@ -126,7 +126,7 @@ def seperate_log_file():
     asyncio.get_running_loop().call_later(log_file_split_check_timer, seperate_log_file)
 
 # Prints out output both to stdout/stderr and potentially to a file 
-def log_output(output_string: str, level: int = logging.INFO, exc_info: bool = False) -> None:
+def log_output(output_string: str, level: int = logging.INFO, exc_info: bool = False):
     if logging_into_file:
         logger.log(level, output_string, exc_info=exc_info)
     else:
@@ -148,7 +148,7 @@ def log_output(output_string: str, level: int = logging.INFO, exc_info: bool = F
         print(logging_format % values, file=print_file)
 
 # Sets up commands that require context earlier
-def set_up_functions() -> None:
+def set_up_functions():
     command_guilds = []
     if get_setting('testing', bool) and get_setting('home_guild_id', bool):
         command_guilds.append(discord.Object(id=get_setting('home_guild_id')))
@@ -161,7 +161,7 @@ def set_up_functions() -> None:
                 description=get_description('turn_off_command'),
                 guild=discord.Object(id=get_setting('home_guild_id'))
             )
-            async def turn_off_bot_command(context: discord.Interaction) -> None:
+            async def turn_off_bot_command(context: discord.Interaction):
                 return await turn_off_command_prototype(context)
         except discord.app_commands.CommandAlreadyRegistered:
             pass #if command already registered there's no need to do anything. Could add logging this part later
@@ -179,7 +179,7 @@ def set_up_functions() -> None:
             template=get_description('template_option'),
             template_number=get_description('template_number_option')
         )
-        async def create_template_command(context: discord.Interaction, template: discord.Attachment, template_number: discord.app_commands.Range[int, 1, 3]) -> None:
+        async def create_template_command(context: discord.Interaction, template: discord.Attachment, template_number: discord.app_commands.Range[int, 1, 3]):
             return await create_template_command_prototype(context, template, template_number)
     except discord.app_commands.CommandAlreadyRegistered:
         pass 
@@ -195,7 +195,7 @@ def set_up_functions() -> None:
             template_number=get_description('template_number_option'),
             show_fields=get_description('show_fields_option')
         )
-        async def view_command(context: discord.Interaction, template_number: discord.app_commands.Range[int, 1, 3] = 0, show_fields: bool = False) -> None:
+        async def view_command(context: discord.Interaction, template_number: discord.app_commands.Range[int, 1, 3] = 0, show_fields: bool = False):
             return await view_command_prototype(context, template_number, show_fields)
     except discord.app_commands.CommandAlreadyRegistered:
         pass
@@ -222,7 +222,7 @@ def set_up_functions() -> None:
             discord.app_commands.Choice(name='Text', value='text'),
             discord.app_commands.Choice(name='Image', value='image')
         ])
-        async def add_field_command(context: discord.Interaction, field_type: discord.app_commands.Choice[str], name: str, template_number: discord.app_commands.Range[int, 1, 3], up_bound: int | None = None, left_bound: int | None = None, down_bound: int | None = None, right_bound: int | None = None, reference_image: discord.Attachment | None = None, color: str = default_color_hex) -> None:
+        async def add_field_command(context: discord.Interaction, field_type: discord.app_commands.Choice[str], name: str, template_number: discord.app_commands.Range[int, 1, 3], up_bound: int | None = None, left_bound: int | None = None, down_bound: int | None = None, right_bound: int | None = None, reference_image: discord.Attachment | None = None, color: str = default_color_hex):
             return await add_field_command_prototype(context, field_type, name, template_number, up_bound, left_bound, down_bound, right_bound, reference_image, color)
     except discord.app_commands.CommandAlreadyRegistered:
         pass
@@ -238,7 +238,7 @@ def set_up_functions() -> None:
             template_number=get_description('template_number_option'),
             field_name=get_description('field_name_option')
         )
-        async def remove_field_command(context: discord.Interaction, template_number: discord.app_commands.Range[int, 1, 3], field_name: str) -> None:
+        async def remove_field_command(context: discord.Interaction, template_number: discord.app_commands.Range[int, 1, 3], field_name: str):
             return await remove_field_command_prototype(context, template_number, field_name)
     except discord.app_commands.CommandAlreadyRegistered:
         pass
@@ -253,7 +253,7 @@ def set_up_functions() -> None:
         @command_describe(
             template_number=get_description('template_number_option')
         )
-        async def use_template_command(context: discord.Interaction, template_number: discord.app_commands.Range[int, 1, 3]) -> None:
+        async def use_template_command(context: discord.Interaction, template_number: discord.app_commands.Range[int, 1, 3]):
             return await use_template_command_prototype(context, template_number)
     except discord.app_commands.CommandAlreadyRegistered:
         pass
@@ -274,7 +274,7 @@ def set_up_functions() -> None:
         )
         @discord.app_commands.choices(font=[discord.app_commands.Choice(name=font_name, value=font_name) for font_name in possible_fonts.keys()])
         @discord.app_commands.check(using_template_check)
-        async def fill_text_field_command(context: discord.Interaction, field_name: str, text: str, font: discord.app_commands.Choice[str], font_size: float = 3., color: str = default_color_hex) -> None:
+        async def fill_text_field_command(context: discord.Interaction, field_name: str, text: str, font: discord.app_commands.Choice[str], font_size: float = 3., color: str = default_color_hex):
             return await fill_text_field_command_prototype(context, field_name, text, font, font_size, color)
     except discord.app_commands.CommandAlreadyRegistered:
         pass
@@ -291,14 +291,14 @@ def set_up_functions() -> None:
             image=get_description('image_option')
         )
         @discord.app_commands.check(using_template_check)
-        async def fill_image_field_command(context: discord.Interaction, field_name: str, image: discord.Attachment) -> None:
+        async def fill_image_field_command(context: discord.Interaction, field_name: str, image: discord.Attachment):
             return await fill_image_field_command_prototype(context, field_name, image)
     except discord.app_commands.CommandAlreadyRegistered:
         pass
 
 # Called when bot connects to discord
 @client.event
-async def on_ready() -> None:
+async def on_ready():
     log_output(f'Logged in as {client.user.name}')
     log_output(client.user.id)
     set_up_functions()
@@ -312,7 +312,7 @@ async def on_ready() -> None:
         seperate_log_file()
 
 @client.event
-async def on_disconnect() -> None:
+async def on_disconnect():
     if not db_handle is None and db_handle.is_connected():
         if not db_cursor is None:
             db_cursor.close()
@@ -320,7 +320,7 @@ async def on_disconnect() -> None:
         log_output('Database disconnected')
 
 @client.event
-async def on_resumed() -> None:
+async def on_resumed():
     global db_handle, db_cursor
     if db_handle is None or not db_handle.is_connected():
         result = connect_database(get_setting('db_username'), get_setting('db_password'), get_setting('database_name'))
@@ -332,19 +332,20 @@ async def on_resumed() -> None:
         log_output('Database reconnected')
 
 @command_tree.error
-async def on_error(context: discord.Interaction, error: discord.app_commands.AppCommandError) -> None:
+async def on_error(context: discord.Interaction, error: discord.app_commands.AppCommandError):
     if type(error) == discord.app_commands.errors.CheckFailure:
         await context.response.send_message('You cannot use this command', ephemeral=True)
         return
     logging.error("An error occured", exc_info=True)
 
 # Main function of the program
-def main() -> None:
+def main():
     global db_handle
     global db_cursor
     global timezone
     global logging_into_file
     global log_date
+    ensure_image_dir()
     result = load_settings(required_keys=main_required_settings + db_required_settings)
     if not result:
         log_output(result, level=logging.CRITICAL)

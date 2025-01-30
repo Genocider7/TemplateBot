@@ -5,7 +5,7 @@ from constants import db_required_settings
 from functions.utils import load_settings, get_setting
 from functions.database_functions import connect_database, execute_query
 
-def main(args: str) -> None:
+def main(args: str):
     if len(args) == 0:
         print('Usage: {} script'.format(os.path.basename(__file__)))
         return

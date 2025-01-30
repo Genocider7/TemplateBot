@@ -25,7 +25,7 @@ possible_fonts = {
     'Simple': FONT_HERSHEY_SIMPLEX
 }
 
-async def error_with_mysql_query(context: discord.Interaction, query: str, error_message: str, use_followup: bool = False) -> None:
+async def error_with_mysql_query(context: discord.Interaction, query: str, error_message: str, use_followup: bool = False):
     log_output('Error while processing a mysql query: \n\t{}\n{}'.format(query, error_message), logging.ERROR)
     method = context.followup.send if use_followup else context.response.send_message
     await method('Sorry, something went wrong. Try again later', ephemeral=True)
@@ -45,7 +45,7 @@ def reconnect_database(database_connection: MySQLConnection, database_cursor: My
     global db_handle, db_cursor
     db_handle, db_cursor = database_connection, database_cursor
 
-async def followup_and_delete(context: discord.Interaction, message: str, delay: int = 10) -> None:
+async def followup_and_delete(context: discord.Interaction, message: str, delay: int = 10):
     await context.followup.send(message)
     asyncio.get_running_loop().call_later(delay, asyncio.create_task, context.delete_original_response())
 
@@ -89,11 +89,11 @@ def delete_template(user_id: int | str, template_number: int, filename: str | No
         ret.returnCode = 1
     return ret
 
-async def turn_off_command_prototype(context: discord.Interaction) -> None:
+async def turn_off_command_prototype(context: discord.Interaction):
     await context.response.send_message('Turning off bot...')
     await client.close()
 
-async def create_template_command_prototype(context: discord.Interaction, template: discord.Attachment, template_number: int) -> None:
+async def create_template_command_prototype(context: discord.Interaction, template: discord.Attachment, template_number: int):
     if template_number < 1 or template_number > 3:
         await context.response.send_message('Incorrect template number. Should be between 1 and 3')
     if type(template.content_type) != str or not template.content_type.startswith('image/'):
@@ -124,7 +124,7 @@ async def create_template_command_prototype(context: discord.Interaction, templa
         attachment = discord.File(path.join(absolute_path_to_project, 'Images', filename), filename=filename)
         replace_button = discord.ui.Button(label='Replace', style=discord.ButtonStyle.primary, emoji='✅')
         cancel_button = discord.ui.Button(label='Cancel', style=discord.ButtonStyle.secondary, emoji='❌')
-        async def replace_action(interaction: discord.Interaction) -> None:
+        async def replace_action(interaction: discord.Interaction):
             if interaction.user != context.user:
                 await interaction.response.send_message('This command was not run by you and you cannot respond to it', ephemeral=True)
                 return
@@ -148,7 +148,7 @@ async def create_template_command_prototype(context: discord.Interaction, templa
                 interaction.message.delete(),
                 interaction.response.send_message('Old template has been deleted and a new one has been successfully created', ephemeral=True)
             )
-        async def cancel_action(interaction: discord.Interaction) -> None:
+        async def cancel_action(interaction: discord.Interaction):
             if interaction.user != context.user:
                 await interaction.response.send_message('This command was not run by you and you cannot respond to it', ephemeral=True)
                 return
@@ -160,13 +160,13 @@ async def create_template_command_prototype(context: discord.Interaction, templa
         buttons.add_item(cancel_button)
         await context.response.send_message(embed=embed, view=buttons, file=attachment)
 
-async def view_command_prototype(context: discord.Interaction, template_number: int = 0, show_fields: bool = False) -> None:
+async def view_command_prototype(context: discord.Interaction, template_number: int = 0, show_fields: bool = False):
     await context.response.defer(ephemeral=True, thinking=True)
     if template_number == 0:
         return await view_all_templates(context)
     return await view_one_template(context, template_number, show_fields)
 
-async def view_all_templates(context: discord.Interaction) -> None:
+async def view_all_templates(context: discord.Interaction):
     embed = discord.Embed(
         title = '{}\'s templates'.format(context.user.display_name),
         color = embed_default_color
@@ -187,7 +187,7 @@ async def view_all_templates(context: discord.Interaction) -> None:
     embed.description = desc
     await context.followup.send(embed=embed, ephemeral=True)
 
-async def view_one_template(context: discord.Interaction, template_number: int, show_fields: bool) -> None:
+async def view_one_template(context: discord.Interaction, template_number: int, show_fields: bool):
     embed = discord.Embed(
         title='{}\'s template no. {}'.format(context.user.display_name, template_number),
         color = embed_default_color
@@ -245,7 +245,7 @@ async def view_one_template(context: discord.Interaction, template_number: int, 
     attachment = discord.File(filepath, filename=filename)
     await context.followup.send(embed=embed, file=attachment)
 
-async def add_field_command_prototype(context: discord.Interaction, field_type: discord.app_commands.Choice[str], name: str, template_number: int, up_bound: int | None = None, left_bound: int | None = None, down_bound: int | None = None, right_bound: int | None = None, reference_image: discord.Attachment | None = None, color: str = default_color_hex) -> None:
+async def add_field_command_prototype(context: discord.Interaction, field_type: discord.app_commands.Choice[str], name: str, template_number: int, up_bound: int | None = None, left_bound: int | None = None, down_bound: int | None = None, right_bound: int | None = None, reference_image: discord.Attachment | None = None, color: str = default_color_hex):
     await context.response.defer(thinking=True)
     bounds = (up_bound, left_bound, down_bound, right_bound)
     use_bounds = not any([b is None for b in bounds])
@@ -309,7 +309,7 @@ async def add_field_command_prototype(context: discord.Interaction, field_type: 
     embed.set_image(url='attachment://{}'.format(filename))
     confirm_button = discord.ui.Button(label='Confirm', style=discord.ButtonStyle.primary, emoji='✅')
     cancel_button = discord.ui.Button(label='Cancel', style=discord.ButtonStyle.primary, emoji='❌')
-    async def confirm_action(interaction: discord.Interaction) -> None:
+    async def confirm_action(interaction: discord.Interaction):
         if interaction.user != context.user:
             await interaction.response.send_message('This command was not run by you and you cannot respond to it', ephemeral=True)
             return
@@ -322,7 +322,7 @@ async def add_field_command_prototype(context: discord.Interaction, field_type: 
             interaction.message.delete(),
             interaction.response.send_message('Field successfully added', ephemeral=True)
         )
-    async def cancel_action(interaction: discord.Interaction) -> None:
+    async def cancel_action(interaction: discord.Interaction):
         if interaction.user != context.user:
             await interaction.response.send_message('This command was not run by you and you cannot respond to it', ephemeral=True)
             return
@@ -334,7 +334,7 @@ async def add_field_command_prototype(context: discord.Interaction, field_type: 
     buttons.add_item(cancel_button)
     await context.followup.send(embed=embed, view=buttons, file=attachment)
 
-async def remove_field_command_prototype(context: discord.Interaction, template_number: int, field_name: str) -> None:
+async def remove_field_command_prototype(context: discord.Interaction, template_number: int, field_name: str):
     query = 'SELECT f.id FROM editable_fields AS f JOIN images AS i WHERE i.enumeration={} AND i.user_id=\"{}\" AND LOWER(f.field_name)=\"{}\"'.format(template_number, context.user.id, field_name.lower())
     result = mysql_select(db_cursor, query)
     if result.returnCode == 1:
@@ -350,7 +350,7 @@ async def remove_field_command_prototype(context: discord.Interaction, template_
         return
     await context.response.send_message('Field \"{}\" successfully removed'.format(field_name), ephemeral=True)
 
-async def delete_from_template_dict(user_id: int) -> None:
+async def delete_from_template_dict(user_id: int):
     global using_template
     data = using_template.pop(user_id, None)
     if data is None:
@@ -363,7 +363,7 @@ async def delete_from_template_dict(user_id: int) -> None:
         description='An hour has passed and because the template usage was not completed, this interaction has expired'
     )
     button = discord.ui.Button(label='Delete this', style=discord.ButtonStyle.red, emoji='🗑️')
-    async def button_click(button_interaction: discord.Interaction) -> None:
+    async def button_click(button_interaction: discord.Interaction):
         if button_interaction.user.id != user_id:
             await button_interaction.response.send_message('This command was not run by you so you cannot delete this message', ephemeral=True)
             return
@@ -376,7 +376,7 @@ async def delete_from_template_dict(user_id: int) -> None:
 def using_template_check(context: discord.Interaction) -> bool:
     return context.user.id in using_template.keys()
 
-async def use_template_command_prototype(context: discord.Interaction, template_number: int) -> None:
+async def use_template_command_prototype(context: discord.Interaction, template_number: int):
     global using_template
     if context.user.id in using_template.keys():
         embed = discord.Embed(
@@ -386,7 +386,7 @@ async def use_template_command_prototype(context: discord.Interaction, template_
         )
         new_button = discord.ui.Button(label='Use a new one', style=discord.ButtonStyle.primary, emoji='✅')
         cancel_button = discord.ui.Button(label='Cancel', style=discord.ButtonStyle.secondary, emoji='❌')
-        async def new_button_action(button_interaction: discord.Interaction) -> None:
+        async def new_button_action(button_interaction: discord.Interaction):
             if button_interaction.user != context.user:
                 await button_interaction.response.send_message('This command was not run by you so you cannot interact with it', ephemeral=True)
                 return
@@ -399,7 +399,7 @@ async def use_template_command_prototype(context: discord.Interaction, template_
                 message.delete()
             )
             del using_template[context.user.id]
-        async def cancel_button_action(button_interaction: discord.Interaction) -> None:
+        async def cancel_button_action(button_interaction: discord.Interaction):
             if button_interaction.user != context.user:
                 await button_interaction.response.send_message('This command was not run by you so you cannot interact with it', ephemeral=True)
                 return
@@ -479,7 +479,7 @@ async def use_template_command_prototype(context: discord.Interaction, template_
             using_template[context.user.id]['image'] = new_image
             using_template[context.user.id]['fields'][field_name]['updated'] = True
         return ret
-    async def finish_action(button_interaction: discord.Interaction) -> None:
+    async def finish_action(button_interaction: discord.Interaction):
         global using_template
         if context.user != button_interaction.user:
             await button_interaction.response.send_message('This command was not run by you so you cannot interact with it', ephemeral=True)
@@ -511,14 +511,14 @@ async def use_template_command_prototype(context: discord.Interaction, template_
             button_interaction.response.send_message(message, file=file),
             button_interaction.message.delete()
         )
-    async def cancel_action(button_interaction: discord.Interaction) -> None:
+    async def cancel_action(button_interaction: discord.Interaction):
         global using_template
         if context.user != button_interaction.user:
             await button_interaction.response.send_message('This command was not run by you so you cannot interact with it', ephemeral=True)
             return
         using_template.pop(context.user.id, None)
         await button_interaction.message.delete()
-    async def update_view(button_interaction: discord.Interaction) -> None:
+    async def update_view(button_interaction: discord.Interaction):
         if context.user != button_interaction.user:
             await button_interaction.response.send_message('This command was not run by you so you cannot interact with it', ephemeral=True)
             return
@@ -585,7 +585,7 @@ async def use_template_command_prototype(context: discord.Interaction, template_
     await context.response.send_message(embed=embed, view=buttons, file=attachment)
     using_template[context.user.id]['message_id'] = (await context.original_response()).id
 
-async def fill_image_field_command_prototype(context: discord.Interaction, field_name: str, image: discord.Attachment) -> None:
+async def fill_image_field_command_prototype(context: discord.Interaction, field_name: str, image: discord.Attachment):
     global using_template
     if not context.user.id in using_template.keys():
         await context.response.send_message('An error occurred, try again later', ephemeral=True)
@@ -601,7 +601,7 @@ async def fill_image_field_command_prototype(context: discord.Interaction, field
     using_template[context.user.id]['fields'][field_name.lower()]['value'] = image_array
     await context.response.send_message('Field \"{}\" has been filled'.format(field_name), ephemeral=True)
 
-async def fill_text_field_command_prototype(context: discord.Interaction, field_name: str, text: str, font: discord.app_commands.Choice[str], font_size: float = 3., color: str = default_color_hex) -> None:
+async def fill_text_field_command_prototype(context: discord.Interaction, field_name: str, text: str, font: discord.app_commands.Choice[str], font_size: float = 3., color: str = default_color_hex):
     global using_template
     if not context.user.id in using_template.keys():
         await context.response.send_message('An error occurred, try again later', ephemeral=True)

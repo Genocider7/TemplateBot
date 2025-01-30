@@ -6,7 +6,7 @@ from typing import Callable
 from os import path, access, W_OK
 from sys import argv
 from shutil import copy as copy_file
-from functions.utils import find_option_in_args, load_settings, get_setting, settings_filename as default_settings_filename
+from functions.utils import find_option_in_args, load_settings, get_setting, settings_filename as default_settings_filename, ensure_image_dir
 from constants import db_required_settings, logging_format, date_format, absolute_path_to_project, default_color_hex, default_hue_range, default_saturation_range, default_value_range
 from functions.database_functions import connect_database, set_logger, select as mysql_select, execute_query
 from functions.image_functions import show_fields as show_image_fields, hex_to_bgr, find_biggest_rectangle, write_on_image, insert_image_into_image, get_recommended_font_size
@@ -20,7 +20,7 @@ availible_fonts = {
     cv2.FONT_HERSHEY_SIMPLEX: 'Simple'
 }
 
-def show_image_task(window_name: str, image: cv2.Mat, threading_flag: threading.Event | None = None) -> None:
+def show_image_task(window_name: str, image: cv2.Mat, threading_flag: threading.Event | None = None):
     cv2.imshow(window_name, image)
     while threading_flag is None or not threading_flag.is_set():
         if cv2.waitKey(100) & 0xFF == 27:
@@ -112,7 +112,7 @@ def prepare(args: list[str]) -> bool:
         logger.addHandler(handler)
         set_logger(logger)
     
-def login() -> None:
+def login():
     global name
     def validate_username(username: str) -> bool:
         if len(username) > 18:
@@ -126,7 +126,7 @@ def login() -> None:
         print('Incorrect username. Try again')
         name = input('Username: ')
     
-def view_command() -> None:
+def view_command():
     query = f'SELECT image_extension, created_at, enumeration FROM images WHERE user_id=\"{name}\"'
     result = mysql_select(db_cursor, query, True, True)
     if not result:
@@ -190,7 +190,7 @@ def view_command() -> None:
     thread.daemon = True
     thread.start()
 
-def create_template_command() -> None:
+def create_template_command():
     print('Please provide a filepath for the template image')
     filepath = input('Filepath: ')
     while not path.isfile(filepath):
@@ -240,7 +240,7 @@ def create_template_command() -> None:
     copy_file(filepath, path.join(absolute_path_to_project, 'Images', f'{name}_{template_number}.{extension}'))
     print('New template created')
 
-def add_field_commad() -> None:
+def add_field_commad():
     result = choose_available_templates('No templates to add a field to. Create a template first')
     if not result:
         if result.returnCode != 1:
@@ -327,7 +327,7 @@ def add_field_commad() -> None:
         return
     print(f'Field {field_name} has been created!')
 
-def remove_field() -> None:
+def remove_field():
     result = choose_available_templates('No templates to remove a field from. Create a template first')
     if not result:
         if result.returnCode != 1:
@@ -364,8 +364,8 @@ def remove_field() -> None:
         return
     print(f'Field {field_name} has been deleted')
     
-# def use_template_command(template_info: tuple[str] | None = None, fields: dict | None = None) -> None:
-def use_template_command(data: dict | None = None) -> None:
+# def use_template_command(template_info: tuple[str] | None = None, fields: dict | None = None):
+def use_template_command(data: dict | None = None):
     if data is None:
         result = choose_available_templates()
         if not result:
@@ -458,11 +458,11 @@ def update_image(data: dict) -> bool:
         data['fields']['image'][field_name]['updated'] = True
     return True
 
-def preview_template(data: dict) -> None:
+def preview_template(data: dict):
     if update_image(data):
         threading.Thread(target=show_image_task, args=('Previewing imge', data['image']), daemon=True).start()
 
-def fill_text_field(data: dict) -> None:
+def fill_text_field(data: dict):
     options = {}
     id_to_name = {}
     for idx, (field_name, field) in enumerate(data['fields']['text'].items()):
@@ -515,7 +515,7 @@ def fill_text_field(data: dict) -> None:
         data['image'] = copy_array(data['original_image'])
     print(f'Field {field_name} filled out!')
 
-def fill_image_field(data: dict) -> None:
+def fill_image_field(data: dict):
     options = {}
     id_to_name = {}
     for idx, (field_name, field) in enumerate(data['fields']['image'].items()):
@@ -545,7 +545,7 @@ def fill_image_field(data: dict) -> None:
     data['fields']['image'][field_name]['value'] = image
     print(f'Field {field_name} filled out!')
 
-def save_image(data: dict) -> None:
+def save_image(data: dict):
     print('Please provide a filepath for the image to be saved to')
     check_ok = False
     while not check_ok:
@@ -572,8 +572,9 @@ def save_image(data: dict) -> None:
     cv2.imwrite(filepath, data['image'])
     print(f'image saved to {filepath}')
 
-def main() -> None:
+def main():
     prepare(argv[1:])
+    ensure_image_dir()
     login()
     options: dict[int, Callable[[], None]] = {
         1: view_command,

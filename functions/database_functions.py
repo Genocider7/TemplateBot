@@ -7,7 +7,7 @@ from .ReturnInfo import ReturnInfo
 
 logger = None
 
-def set_logger(logger_handle: Logger) -> None:
+def set_logger(logger_handle: Logger):
     global logger
     logger = logger_handle
 
