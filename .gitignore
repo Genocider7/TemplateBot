@@ -8,6 +8,7 @@ settings.json
 **.jpeg 
 **.diff
 **.patch
+**.zip
 
 Tests/*
 test.py
