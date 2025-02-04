@@ -422,7 +422,7 @@ async def use_template_command_prototype(context: discord.Interaction, template_
     template_id, filename = result.returnValue
     filepath = path.join(absolute_path_to_project, 'Images', filename)
     image = imread(filepath)
-    data = {'template_id': template_id, 'filename': filename, 'image': image, 'channel_id': context.channel_id}
+    data = {'template_id': template_id, 'filename': filename, 'image': image, 'channel_id': context.channel_id, 'original_template': image.copy()}
     fields = {}
     query = 'SELECT LOWER(field_name), type, up_bound, left_bound, down_bound, right_bound FROM editable_fields WHERE image_id={}'.format(template_id)
     result = mysql_select(db_cursor, query, True, True)
@@ -619,5 +619,8 @@ async def fill_text_field_command_prototype(context: discord.Interaction, field_
         return
     values = text, possible_fonts[font.value], font_size, result.returnValue
     using_template[context.user.id]['fields'][field_name.lower()]['value'] = values
-    using_template[context.user.id]['fields'][field_name.lower()]['updated'] = False
+    if using_template[context.user.id]['fields'][field_name.lower()]['updated']:
+        using_template[context.user.id]['image'] = using_template[context.user.id]['original_template'].copy()
+        for field_name in using_template[context.user.id]['fields'].copy().keys():
+            using_template[context.user.id]['fields'][field_name]['updated'] = False
     await context.response.send_message('Field \"{}\" has been filled'.format(field_name), ephemeral=True)
