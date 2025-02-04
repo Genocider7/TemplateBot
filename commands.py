@@ -562,7 +562,6 @@ async def use_template_command_prototype(context: discord.Interaction, template_
     update_view_button.callback = update_view
     cancel_button.callback = cancel_action
     buttons = discord.ui.View(timeout=60 * 60)
-    # buttons = discord.ui.View(timeout=None)
     buttons.add_item(finish_button)
     buttons.add_item(update_view_button)
     buttons.add_item(cancel_button)
@@ -599,6 +598,7 @@ async def fill_image_field_command_prototype(context: discord.Interaction, field
         return
     image_array = imdecode(asarray(bytearray(await image.read()), dtype=uint8), IMREAD_COLOR)
     using_template[context.user.id]['fields'][field_name.lower()]['value'] = image_array
+    using_template[context.user.id]['fields'][field_name.lower()]['updated'] = False
     await context.response.send_message('Field \"{}\" has been filled'.format(field_name), ephemeral=True)
 
 async def fill_text_field_command_prototype(context: discord.Interaction, field_name: str, text: str, font: discord.app_commands.Choice[str], font_size: float = 3., color: str = default_color_hex):
@@ -619,4 +619,5 @@ async def fill_text_field_command_prototype(context: discord.Interaction, field_
         return
     values = text, possible_fonts[font.value], font_size, result.returnValue
     using_template[context.user.id]['fields'][field_name.lower()]['value'] = values
+    using_template[context.user.id]['fields'][field_name.lower()]['updated'] = False
     await context.response.send_message('Field \"{}\" has been filled'.format(field_name), ephemeral=True)
