@@ -597,7 +597,7 @@ async def fill_image_field_command_prototype(context: discord.Interaction, field
     if using_template[context.user.id]['fields'][field_name.lower()]['type'] != 'image':
         await context.response.send_message('This field is a text field. Please use command /fill_text_field', ephemeral=True)
         return
-    image_array = imdecode(asarray(bytearray(image.read()), dtype=uint8), IMREAD_COLOR)
+    image_array = imdecode(asarray(bytearray(await image.read()), dtype=uint8), IMREAD_COLOR)
     using_template[context.user.id]['fields'][field_name.lower()]['value'] = image_array
     await context.response.send_message('Field \"{}\" has been filled'.format(field_name), ephemeral=True)
 
