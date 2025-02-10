@@ -422,7 +422,7 @@ async def use_template_command_prototype(context: discord.Interaction, template_
     template_id, filename = result.returnValue
     filepath = path.join(absolute_path_to_project, 'Images', filename)
     image = imread(filepath)
-    data = {'template_id': template_id, 'filename': filename, 'image': image, 'channel_id': context.channel_id}
+    data = {'template_id': template_id, 'filename': filename, 'image': image, 'channel_id': context.channel_id, 'original_template': image.copy()}
     fields = {}
     query = 'SELECT LOWER(field_name), type, up_bound, left_bound, down_bound, right_bound FROM editable_fields WHERE image_id={}'.format(template_id)
     result = mysql_select(db_cursor, query, True, True)
@@ -562,7 +562,6 @@ async def use_template_command_prototype(context: discord.Interaction, template_
     update_view_button.callback = update_view
     cancel_button.callback = cancel_action
     buttons = discord.ui.View(timeout=60 * 60)
-    # buttons = discord.ui.View(timeout=None)
     buttons.add_item(finish_button)
     buttons.add_item(update_view_button)
     buttons.add_item(cancel_button)
@@ -597,8 +596,9 @@ async def fill_image_field_command_prototype(context: discord.Interaction, field
     if using_template[context.user.id]['fields'][field_name.lower()]['type'] != 'image':
         await context.response.send_message('This field is a text field. Please use command /fill_text_field', ephemeral=True)
         return
-    image_array = imdecode(asarray(bytearray(image.read()), dtype=uint8), IMREAD_COLOR)
+    image_array = imdecode(asarray(bytearray(await image.read()), dtype=uint8), IMREAD_COLOR)
     using_template[context.user.id]['fields'][field_name.lower()]['value'] = image_array
+    using_template[context.user.id]['fields'][field_name.lower()]['updated'] = False
     await context.response.send_message('Field \"{}\" has been filled'.format(field_name), ephemeral=True)
 
 async def fill_text_field_command_prototype(context: discord.Interaction, field_name: str, text: str, font: discord.app_commands.Choice[str], font_size: float = 3., color: str = default_color_hex):
@@ -619,4 +619,8 @@ async def fill_text_field_command_prototype(context: discord.Interaction, field_
         return
     values = text, possible_fonts[font.value], font_size, result.returnValue
     using_template[context.user.id]['fields'][field_name.lower()]['value'] = values
+    if using_template[context.user.id]['fields'][field_name.lower()]['updated']:
+        using_template[context.user.id]['image'] = using_template[context.user.id]['original_template'].copy()
+        for field_name in using_template[context.user.id]['fields'].copy().keys():
+            using_template[context.user.id]['fields'][field_name]['updated'] = False
     await context.response.send_message('Field \"{}\" has been filled'.format(field_name), ephemeral=True)
